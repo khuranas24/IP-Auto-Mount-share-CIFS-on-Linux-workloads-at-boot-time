@@ -1,0 +1,197 @@
+Introduction ( Mount SMB share in Linux)  
+
+What is the use of tool/IP?  
+
+It’s a simple script which will help to mount share without saving credentials in server. This can be achieve by two below scenarios:  
+
+  
+
+Scenario 1 : Create azure file share -> SMB scripts steps can be seen from Azure (Connect) – drawback is credentials will be stored on Linux machine , where any user can access (sudo , root previleges)  
+
+Scenario 2 : Using Azure key vault -> Create azure file share -> Create secret in Azure key vault   
+
+We can delete credential files in both the scenarios but in 1st case after reboot mount pt. will disappear  
+
+  
+
+Solution to achieve Scenario 2 , which is ideal and secure:  
+
+  
+
+Steps to install Azcli cmdlets in linux VM :  
+
+rpm --import https://packages.microsoft.com/keys/microsoft.asc  
+
+sudo sh -c 'echo -e "[azure-cli] name=Azure CLI baseurl=https://packages.microsoft.com/yumrepos/azure-cli enabled=1 gpgcheck=1 gpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azure-cli.repo'  
+
+sudo yum install azure-cli  
+
+az login --identity --allow-no-subscriptions  
+
+yum install jq  
+
+http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPMS/  
+
+rpm -Uvh atomic-release*rpm  
+
+rpm -Uvh epel-release*rpm  
+
+rpm --import http://download-ib01.fedoraproject.org/pub/epel/7/x86_64/  
+
+yum install jq  
+
+  
+
+Commands to Mount SMB share:  
+
+  
+
+k=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net' -H Metadata:true | jq --raw-output -r '.access_token’)  
+
+#change the vault name(keypocoracle) and secret name(mount-key-01) as per your env  
+
+val=$(curl https://keypocoracle.vault.azure.net//secrets/mount-key-01?api-version=2016-10-01 -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6ImtnMkxZczJUMENUaklmajRydDZKSXluZW4zOCIsImtpZCI6ImtnMkxZczJUMENUaklmajRydDZKSXluZW4zOCJ9.eyJhdWQiOiJodHRwczovL3ZhdWx0LmF6dXJlLm5ldCIsImlzcyI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0LzcyZjk4OGJmLTg2ZjEtNDFhZi05MWFiLTJkN2NkMDExZGI0Ny8iLCJpYXQiOjE2MDMwOTI5MTQsIm5iZiI6MTYwMzA5MjkxNCwiZXhwIjoxNjAzMTc5NjE0LCJhaW8iOiJFMlJnWU5BTWlQeDhseS81UmV5YWVXLzJ2TTN4QndBPSIsImFwcGlkIjoiNGQxYzU5MDUtNjAyYi00YzE0LTlhYmUtNmEyYzBmMjM0ZGRjIiwiYXBwaWRhY3IiOiIyIiwiaWRwIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvNzJmOTg4YmYtODZmMS00MWFmLTkxYWItMmQ3Y2QwMTFkYjQ3LyIsIm9pZCI6ImU3OWEzODdhLWQzNmYtNDA2OS1hMWIyLTA2MWM2ZDExZjg3MiIsInJoIjoiMC5BUm9BdjRqNWN2R0dyMEdScXkxODBCSGJSd1ZaSEUwcllCUk1tcjVxTEE4alRkd2FBQUEuIiwic3ViIjoiZTc5YTM4N2EtZDM2Zi00MDY5LWExYjItMDYxYzZkMTFmODcyIiwidGlkIjoiNzJmOTg4YmYtODZmMS00MWFmLTkxYWItMmQ3Y2QwMTFkYjQ3IiwidXRpIjoiMk5tSWdabFFUVW1RbmhEajcxRUtBQSIsInZlciI6IjEuMCIsInhtc19taXJpZCI6Ii9zdWJzY3JpcHRpb25zL2I3OWE1MTYxLTg2OGYtNGUyNy05MTNmLTY0YmMzNDc5MmRhYi9yZXNvdXJjZWdyb3Vwcy9QT0Nfb3JhY2xlL3Byb3ZpZGVycy9NaWNyb3NvZnQuQ29tcHV0ZS92aXJ0dWFsTWFjaGluZXMvVk0xLW9yYWNsZSJ9.PLsMn1a-XEf7rDPJbEzIH2C9Cl1MB-KRuwhheO4hTB_d7B3vW1VEttChf0kdNrY2JqkFrFcbhqi9bopZX6ft1mIeOpwIzcJrLH7JaXtW8IsBcRtTVOKbPIHmNL0bsuS35JdNgfIJPCtx-F1i00S5BnI1RNHTjRIsmU4ZBjaEUR4Euycaa9MU5DcS1hLXpZIpDgJG6VzHBbpoj31EoVBlpkq0aGR8AUFslZYAuWfTX6kU9v4yC-PHRXUqia-ERhycRL1GtBdwivgtR5HYgkuiCgIiOzTELnXhC_cEF56UGVuAdKPDDb3hmH7w5AjFBaYUq4_Yj3N_rLlmNahURStihA"t -r '.value’)  
+
+  
+
+Commands to Mount SMB share:  
+
+- az login --identity --allow-no-subscriptions  
+
+- if [ ! -d "/sudo mkdir /var/spool/pentaho_temp" ]; then  
+
+sudo mkdir -p /var/spool/pentaho_temp  
+
+fi  
+
+- if [ ! -d "/etc/smbcredentials" ]; then  
+
+sudo mkdir -p /etc/smbcredentials  
+
+fi  
+
+- az keyvault secret download --name mount-key-01 --vault-name keypocoracle --file secret  
+
+- val=$(cat secret)  
+
+- cat << EOF > /etc/smbcredentials/keypocoracle.cred  
+
+# change the storage account name  
+
+username=storageaccoracle  
+
+password=$val  
+
+EOF  
+
+- sudo chmod 600 /etc/smbcredentials/keypocoracle.cred  
+
+#change the gid and uid as per user and group  
+
+- sudo mount -t cifs //storageaccoracle.file.core.windows.net/pocoracle /var/spool/pentaho_temp -o vers=3.0,credentials=/etc/smbcredentials/keypocoracle.cred,dir_mode=0777,file_mode=0777,serverino  
+
+- rm -f secret  
+
+- rm -f /etc/smbcredentials/keypocoracle.cred  
+
+  
+
+Create a script to execute at boot time:  
+
+  
+
+Create a service in system - /etc/systemd/system  
+
+[root@vm1-oracle system]# cat cifs.service  
+
+[Unit]  
+
+Description=Description for sample script goes here  
+
+After=network.target  
+
+[Service]  
+
+Type=simple  
+
+ExecStart=/opt/script1.sh  
+
+TimeoutStartSec=0  
+
+[Install]  
+
+WantedBy=default.target  
+
+Enable it (with systemctl command)  
+
+& to execute script at boot time add entry in /etc/rc.local  
+
+  
+
+  
+
+How is this will help the business  
+
+This approach ensures secure SMB share mounting via script at boot time.  
+
+Document Purpose  
+
+Business Scenarios   
+
+This script facilitates secure data migration, particularly for banking customers. It transfers data between servers using a Linux mount share without saving your credentials.  
+
+Solution that resolves the issues  
+
+This was implemented for a banking customer to address their primary concern of storing passwords and credentials on the server.  
+
+Intended Audience  
+
+Who will be the intended user/project that can use this IP.  
+
+These can be utilized in various projects where open-source software is extensively used in replatforming or rehosting architectures for consultants.  
+
+Design  
+
+From this section you can explain how the IP is designed and its components   
+
+  
+
+The section titled "Design" in your document provides an explanation of how the IP is designed and its components. Here is a summary:  
+
+The IP design involves creating a secure and efficient method for mounting SMB shares on a Linux server without saving credentials on the server. This is achieved through the use of Azure Key Vault to store and retrieve credentials securely. The design includes the following components:  
+
+Azure File Share: This is where the SMB share is created.  
+
+Azure Key Vault: This is used to store the credentials securely.  
+
+Linux VM: The virtual machine where the SMB share will be mounted.  
+
+Azcli Cmdlets: These are installed on the Linux VM to interact with Azure services.  
+
+Scripts: These are used to automate the process of mounting the SMB share and retrieving the credentials from Azure Key Vault.  
+
+The design ensures that the credentials are not stored on the server, making it a secure solution for mounting SMB shares  
+
+  
+
+Design Decisions  
+
+  
+
+The design decisions for the IP are based on ensuring security and efficiency in mounting SMB shares on a Linux server without saving credentials on the server. Here are the key design decisions:  
+
+Use of Azure Key Vault: The decision to use Azure Key Vault to store and retrieve credentials securely ensures that the credentials are not stored on the server, enhancing security1.  
+
+Automation with Scripts: Scripts are used to automate the process of mounting the SMB share and retrieving the credentials from Azure Key Vault. This decision simplifies the process and reduces the risk of human error1.  
+
+Installation of Azcli Cmdlets: Installing Azcli Cmdlets on the Linux VM allows for seamless interaction with Azure services, making the process more efficient1.  
+
+Creation of Azure File Share: The decision to create an Azure File Share provides a reliable and scalable storage solution for the SMB share1.  
+
+Linux VM as the Mount Point: Using a Linux VM as the mount point for the SMB share ensures compatibility and flexibility in managing the mounted share1.  
+
+These design decisions collectively contribute to a secure and efficient method for mounting SMB shares on a Linux server.  
+
+  
+
+ 
